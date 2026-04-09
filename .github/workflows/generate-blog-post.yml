@@ -2,7 +2,11 @@ name: Generate Blog Post from Issue
 
 on:
   issues:
-    types: [opened, edited, labeled, reopened]
+    types: [labeled, edited, reopened]
+
+concurrency:
+  group: blog-issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -11,7 +15,12 @@ permissions:
 
 jobs:
   generate:
-    if: contains(github.event.issue.labels.*.name, 'blog-post') && github.event.issue.state == 'open'
+    if: |
+      github.event.issue.state == 'open' &&
+      (
+        (github.event.action == 'labeled' && github.event.label.name == 'blog-post') ||
+        ((github.event.action == 'edited' || github.event.action == 'reopened') && contains(github.event.issue.labels.*.name, 'blog-post'))
+      )
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +42,13 @@ jobs:
             --event-path "$GITHUB_EVENT_PATH" \
             --guidelines "BLOG_FORMATTING_GUIDELINES.md" \
             --output-dir "blog"
+
+      - name: Job summary
+        run: |
+          echo "### Blog generation" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Issue: #${{ github.event.issue.number }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Mode: ${{ steps.generate.outputs.generation_mode }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Output: ${{ steps.generate.outputs.post_path }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6

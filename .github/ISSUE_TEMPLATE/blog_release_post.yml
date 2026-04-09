@@ -29,7 +29,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: SparkOS version string
+      description: SparkOS version string (example: 16.0)
       placeholder: "16.0"
     validations:
       required: true

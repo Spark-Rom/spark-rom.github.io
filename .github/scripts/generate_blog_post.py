@@ -117,39 +117,29 @@ def build_mdx(payload: dict[str, Any]) -> str:
     def bullets(items: list[str]) -> str:
         return "\n".join(f"- {x}" for x in items)
 
-    return textwrap.dedent(
-        f"""\
-        ---
-        slug: {payload['slug']}
-        title: {payload['title']}
-        authors: [{', '.join(payload['authors'])}]
-        tags: [{', '.join(payload['tags'])}]
-        ---
-
-        {payload['summary']}
-
-        {{/* truncate */}}
-
-        ## Highlights
-
-        {bullets(payload['highlights'])}
-
-        ## Detailed Changelog
-
-        {bullets(payload['detailed_changelog'])}
-
-        ## Known Issues
-
-        {bullets(payload['known_issues'])}
-
-        ## Support / Reporting
-
-        {bullets(payload['support_links'])}
-        """
+    return (
+        f"---\n"
+        f"slug: {payload['slug']}\n"
+        f"title: {payload['title']}\n"
+        f"authors: [{', '.join(payload['authors'])}]\n"
+        f"tags: [{', '.join(payload['tags'])}]\n"
+        f"---\n\n"
+        f"{payload['summary']}\n\n"
+        f"{{/* truncate */}}\n\n"
+        f"## Highlights\n\n"
+        f"{bullets(payload['highlights'])}\n\n"
+        f"## Detailed Changelog\n\n"
+        f"{bullets(payload['detailed_changelog'])}\n\n"
+        f"## Known Issues\n\n"
+        f"{bullets(payload['known_issues'])}\n\n"
+        f"## Support / Reporting\n\n"
+        f"{bullets(payload['support_links'])}\n"
     )
 
 
-def call_openai(model: str, api_key: str, guideline_text: str, issue_data: dict[str, Any]) -> dict[str, Any] | None:
+def call_openai(
+    model: str, api_key: str, guideline_text: str, issue_data: dict[str, Any]
+) -> tuple[dict[str, Any] | None, str | None]:
     prompt = {
         "role": "system",
         "content": (
@@ -188,9 +178,9 @@ def call_openai(model: str, api_key: str, guideline_text: str, issue_data: dict[
             raw = r.read().decode("utf-8")
             data = json.loads(raw)
             content = data["choices"][0]["message"]["content"]
-            return json.loads(content)
-    except (urllib.error.URLError, KeyError, ValueError, json.JSONDecodeError):
-        return None
+            return json.loads(content), None
+    except (urllib.error.URLError, KeyError, ValueError, json.JSONDecodeError) as e:
+        return None, str(e)
 
 
 def sanitize_payload(payload: dict[str, Any], fallback: dict[str, Any]) -> dict[str, Any]:
@@ -272,11 +262,16 @@ def main() -> int:
     guide_text = Path(args.guidelines).read_text(encoding="utf-8")
 
     llm_payload = None
+    llm_error = None
+    generation_mode = "fallback"
     api_key = os.environ.get("OPENAI_API_KEY", "")
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
+    print(f"OPENAI_API_KEY present: {'yes' if bool(api_key) else 'no'}")
+    print(f"OPENAI_MODEL: {model}")
+
     if api_key:
-        llm_payload = call_openai(
+        llm_payload, llm_error = call_openai(
             model=model,
             api_key=api_key,
             guideline_text=guide_text,
@@ -287,6 +282,13 @@ def main() -> int:
                 "date_utc": dt.datetime.utcnow().strftime("%Y-%m-%d"),
             },
         )
+        if llm_payload:
+            generation_mode = "ai"
+            print("Generation mode: ai")
+        else:
+            print(f"Generation mode: fallback (LLM call failed: {llm_error})")
+    else:
+        print("Generation mode: fallback (no API key)")
 
     payload = sanitize_payload(llm_payload or {}, fallback)
 
@@ -309,9 +311,12 @@ def main() -> int:
         f"""\
         Automated blog post generated from issue #{issue_number}.
 
+        Closes #{issue_number}
+
         - Source issue: {issue_url}
         - Generated slug: `{payload['slug']}`
         - Selected tags: `{', '.join(payload['tags'])}`
+        - Generation mode: `{generation_mode}`
 
         Missing/TBD fields detected:
         {missing_block}
@@ -324,6 +329,7 @@ def main() -> int:
             f.write(f"post_path={out_path.as_posix()}\n")
             f.write(f"branch_slug={to_kebab(payload['slug'])}\n")
             f.write(f"pr_title={pr_title}\n")
+            f.write(f"generation_mode={generation_mode}\n")
             f.write("pr_body<<EOF\n")
             f.write(pr_body)
             f.write("EOF\n")
