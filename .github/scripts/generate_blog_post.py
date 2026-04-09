@@ -179,6 +179,12 @@ def call_openai(
             data = json.loads(raw)
             content = data["choices"][0]["message"]["content"]
             return json.loads(content), None
+    except urllib.error.HTTPError as e:
+        try:
+            body = e.read().decode("utf-8")
+        except Exception:
+            body = "<unable to read response body>"
+        return None, f"HTTP {e.code}: {body}"
     except (urllib.error.URLError, KeyError, ValueError, json.JSONDecodeError) as e:
         return None, str(e)
 
@@ -265,7 +271,7 @@ def main() -> int:
     llm_error = None
     generation_mode = "fallback"
     api_key = os.environ.get("OPENAI_API_KEY", "")
-    model = os.environ.get("OPENAI_MODEL", "gpt-5.4-nano")
+    model = os.environ.get("OPENAI_MODEL") or "gpt-5.4-mini"
 
     print(f"OPENAI_API_KEY present: {'yes' if bool(api_key) else 'no'}")
     print(f"OPENAI_MODEL: {model}")
