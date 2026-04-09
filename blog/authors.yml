@@ -1,0 +1,15 @@
+sparkteam:
+  name: SparkOS Team
+  title: Project Maintainers
+  url: https://spark-os.live
+  image_url: https://github.com/Spark-Rom.png
+  page: true
+  socials:
+    github: Spark-Rom
+
+releasebot:
+  name: Release Automation
+  title: Build & OTA Pipeline
+  url: https://github.com/Spark-Rom
+  image_url: https://github.com/Spark-Rom.png
+  page: true

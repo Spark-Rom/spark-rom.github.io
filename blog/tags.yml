@@ -1,0 +1,29 @@
+release:
+  label: Release
+  permalink: /release
+  description: Official SparkOS release announcements
+
+changelog:
+  label: Changelog
+  permalink: /changelog
+  description: Device and source-level change summaries
+
+security:
+  label: Security
+  permalink: /security
+  description: Security patches and CVE-related updates
+
+hotfix:
+  label: Hotfix
+  permalink: /hotfix
+  description: Urgent fixes between regular releases
+
+maintenance:
+  label: Maintenance
+  permalink: /maintenance
+  description: Infrastructure and tooling updates
+
+misc:
+  label: Miscellaneous
+  permalink: /misc
+  description: Other updates and announcements not fitting into the above categories
