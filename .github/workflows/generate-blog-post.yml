@@ -1,0 +1,49 @@
+name: Generate Blog Post from Issue
+
+on:
+  issues:
+    types: [opened, edited, labeled, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+jobs:
+  generate:
+    if: contains(github.event.issue.labels.*.name, 'blog-post') && github.event.issue.state == 'open'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate MDX post from issue
+        id: generate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+        run: |
+          python .github/scripts/generate_blog_post.py \
+            --event-path "$GITHUB_EVENT_PATH" \
+            --guidelines "BLOG_FORMATTING_GUIDELINES.md" \
+            --output-dir "blog"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "blog: add generated release post"
+          branch: "automation/blog-issue-${{ github.event.issue.number }}-${{ steps.generate.outputs.branch_slug }}"
+          delete-branch: true
+          title: ${{ steps.generate.outputs.pr_title }}
+          body: ${{ steps.generate.outputs.pr_body }}
+          labels: |
+            automated-pr
+            blog-post
+          add-paths: |
+            ${{ steps.generate.outputs.post_path }}

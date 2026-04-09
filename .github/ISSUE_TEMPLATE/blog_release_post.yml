@@ -1,0 +1,98 @@
+name: Blog Release Post
+description: Create a SparkOS source-release blog post draft
+title: "blog: <version> <release-type>"
+labels:
+  - blog-post
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill this form to trigger automated blog post generation.
+        The workflow will create a PR with a new Docusaurus `.mdx` post.
+
+  - type: dropdown
+    id: release_type
+    attributes:
+      label: Release Type
+      description: Pick the release class for tag/title generation.
+      options:
+        - Major Release
+        - Monthly Release
+        - Hotfix
+        - Security Update
+        - Maintenance Update
+        - Misc Announcement
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: SparkOS version string (example: 16.0)
+      placeholder: "16.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: 2-4 lines summary for the post opening.
+      placeholder: Concise summary of this release.
+    validations:
+      required: true
+
+  - type: textarea
+    id: highlights
+    attributes:
+      label: Highlights
+      description: Key user-facing highlights, one per line.
+      placeholder: |
+        Performance improvements in SystemUI
+        Updated translations
+        Better battery idle behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: detailed_changelog
+    attributes:
+      label: Detailed Changelog
+      description: Detailed source changelog entries, one per line.
+      placeholder: |
+        Framework: fixed QS tile state desync
+        Settings: improved search indexing
+        Build: refreshed security patch baseline
+    validations:
+      required: true
+
+  - type: textarea
+    id: known_issues
+    attributes:
+      label: Known Issues
+      description: Known issues for this release. If none, write None.
+      placeholder: None.
+    validations:
+      required: true
+
+  - type: textarea
+    id: security_notes
+    attributes:
+      label: Security Notes
+      description: Optional security-specific notes. Add None if not applicable.
+      placeholder: None.
+    validations:
+      required: true
+
+  - type: textarea
+    id: support_links
+    attributes:
+      label: Support Links
+      description: Optional overrides. If empty, defaults will be used.
+      placeholder: |
+        Community: https://t.me/SparkOSCommunity
+        Channel: https://t.me/SparkOSChannel
+        GitHub: https://github.com/Spark-Rom
+    validations:
+      required: false
