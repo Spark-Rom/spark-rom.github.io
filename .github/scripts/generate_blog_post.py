@@ -303,6 +303,8 @@ def main() -> int:
     out_path.write_text(build_mdx(payload), encoding="utf-8")
 
     pr_title = f"blog: add {payload['slug']} release post"
+    missing_lines = payload.get("missing_fields", [])
+    missing_block = "".join(f"- {m}\n" for m in missing_lines) if missing_lines else "- None"
     pr_body = textwrap.dedent(
         f"""\
         Automated blog post generated from issue #{issue_number}.
@@ -312,7 +314,7 @@ def main() -> int:
         - Selected tags: `{', '.join(payload['tags'])}`
 
         Missing/TBD fields detected:
-        {''.join(f'- {m}\n' for m in payload.get('missing_fields', [])) if payload.get('missing_fields') else '- None'}
+        {missing_block}
         """
     )
 
