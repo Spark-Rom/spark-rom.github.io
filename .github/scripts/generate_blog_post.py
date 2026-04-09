@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate SparkOS Docusaurus blog post from GitHub issue payload.
 
-- Uses LLM when OPENAI_API_KEY is present.
+- Uses LLM when GEMINI_API_KEY is present.
 - Falls back to deterministic generation when unavailable.
 - Writes one .mdx file under blog/ and emits workflow outputs.
 """
@@ -137,37 +137,37 @@ def build_mdx(payload: dict[str, Any]) -> str:
     )
 
 
-def call_openai(
+def call_gemini(
     model: str, api_key: str, guideline_text: str, issue_data: dict[str, Any]
 ) -> tuple[dict[str, Any] | None, str | None]:
-    prompt = {
-        "role": "system",
-        "content": (
-            "You generate a single Docusaurus .mdx blog post payload in JSON only. "
-            "No markdown fences, no prose. Follow this guide strictly:\n\n"
-            f"{guideline_text}\n\n"
-            "Output JSON schema keys exactly: "
-            "slug,title,authors,tags,summary,highlights,detailed_changelog,known_issues,support_links,missing_fields"
-        ),
-    }
-
-    user = {
-        "role": "user",
-        "content": json.dumps(issue_data, ensure_ascii=False, indent=2),
-    }
+    system_instruction = (
+        "You generate a single Docusaurus .mdx blog post payload in JSON only. "
+        "No markdown fences, no prose. Follow this guide strictly:\n\n"
+        f"{guideline_text}\n\n"
+        "Output JSON schema keys exactly: "
+        "slug,title,authors,tags,summary,highlights,detailed_changelog,known_issues,support_links,missing_fields"
+    )
 
     req_body = {
-        "model": model,
-        "temperature": 0.2,
-        "response_format": {"type": "json_object"},
-        "messages": [prompt, user],
+        "systemInstruction": {
+            "parts": [{"text": system_instruction}]
+        },
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": json.dumps(issue_data, ensure_ascii=False, indent=2)}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.2,
+            "responseMimeType": "application/json"
+        }
     }
 
     req = urllib.request.Request(
-        url="https://api.openai.com/v1/chat/completions",
+        url=f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}",
         data=json.dumps(req_body).encode("utf-8"),
         headers={
-            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         },
         method="POST",
@@ -177,7 +177,7 @@ def call_openai(
         with urllib.request.urlopen(req, timeout=60) as r:
             raw = r.read().decode("utf-8")
             data = json.loads(raw)
-            content = data["choices"][0]["message"]["content"]
+            content = data["candidates"][0]["content"]["parts"][0]["text"]
             return json.loads(content), None
     except urllib.error.HTTPError as e:
         try:
@@ -270,14 +270,14 @@ def main() -> int:
     llm_payload = None
     llm_error = None
     generation_mode = "fallback"
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    model = os.environ.get("OPENAI_MODEL") or "gpt-5.4-mini"
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    model = os.environ.get("GEMINI_MODEL") or "gemini-1.5-flash"
 
-    print(f"OPENAI_API_KEY present: {'yes' if bool(api_key) else 'no'}")
-    print(f"OPENAI_MODEL: {model}")
+    print(f"GEMINI_API_KEY present: {'yes' if bool(api_key) else 'no'}")
+    print(f"GEMINI_MODEL: {model}")
 
     if api_key:
-        llm_payload, llm_error = call_openai(
+        llm_payload, llm_error = call_gemini(
             model=model,
             api_key=api_key,
             guideline_text=guide_text,

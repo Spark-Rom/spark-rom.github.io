@@ -35,8 +35,8 @@ jobs:
       - name: Generate MDX post from issue
         id: generate
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
         run: |
           python .github/scripts/generate_blog_post.py \
             --event-path "$GITHUB_EVENT_PATH" \
