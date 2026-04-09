@@ -265,7 +265,7 @@ def main() -> int:
     llm_error = None
     generation_mode = "fallback"
     api_key = os.environ.get("OPENAI_API_KEY", "")
-    model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    model = os.environ.get("OPENAI_MODEL", "gpt-5.4-nano")
 
     print(f"OPENAI_API_KEY present: {'yes' if bool(api_key) else 'no'}")
     print(f"OPENAI_MODEL: {model}")
