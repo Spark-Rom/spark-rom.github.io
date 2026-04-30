@@ -15,13 +15,13 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://spark-os.live',
+  url: 'https://blog.spark-os.tech',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
   organizationName: 'Spark-Rom',
-  projectName: 'SparkOSWebsite',
+  projectName: 'spark-rom.github.io',
 
   onBrokenLinks: 'throw',
 
@@ -52,7 +52,7 @@ const config: Config = {
             xslt: true,
           },
           editUrl:
-            'https://github.com/Spark-Rom/SparkOSWebsite/tree/main/sparkblog/',
+            'https://github.com/Spark-Rom/tree/main/sparkblog/',
           // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
@@ -87,7 +87,7 @@ const config: Config = {
           position: 'right',
         },
         {
-          href: 'https://spark-os.live',
+          href: 'https://spark-os.tech',
           label: 'Main Website',
           position: 'right',
         },
@@ -131,11 +131,11 @@ const config: Config = {
           items: [
             {
               label: 'Main Website',
-              href: 'https://spark-os.live',
+              href: 'https://spark-os.tech',
             },
             {
               label: 'GitHub',
-              href: 'https://github.com/Spark-Rom/SparkOSWebsite',
+              href: 'https://github.com/Spark-Rom/',
             },
           ],
         },
